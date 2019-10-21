@@ -54,3 +54,68 @@ Java 버전을 고르는데 가장 큰 영향을 주는 것은 `사용하는 컨
 ## 프로젝트 생성
 
 - Spring Initializr
+
+프로젝트 생성시 jdbc template를 클릭했으면 설정을 해줘야 오류가 안난다.
+
+## 실행가능한 (Executable) jar 만들기
+
+실행가능한 jar는 Fat Jars라고 불린다.
+
+gradle의 경우 아래 코드를 추가해야 한다.
+
+```java
+buildscript {
+    ext {
+        springBootVersion = '2.0.0.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }    
+}
+```
+
+maven의 경우 아래 코드를 추가해야 한다.
+
+- repackage: 자동 실행 가능한 jar 또는 war 파일을 작성하십시오. 일반 아티팩트를 대체하거나 별도의 분류기 를 사용하여 빌드 라이프 사이클에 첨부 할 수 있습니다 .
+- run: Spring Boot 응용 프로그램을 여러 옵션으로 실행하여 매개 변수를 전달하십시오.
+- start그리고 stop다음에 봄 부팅 응용 프로그램을 통합하는 integration-test응용 프로그램이 이전에 시작되도록 단계입니다.
+- build-info: 액츄에이터가 사용할 수있는 빌드 정보를 생성합니다.
+
+```xml
+<build>
+  ...
+  <plugins>
+    ...
+    <plugin>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-maven-plugin</artifactId>
+      <version>2.2.0.RELEASE</version>
+      <executions>
+        <execution>
+          <goals>
+            <goal>repackage</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
+    ...
+  </plugins>
+  ...
+</build>
+```
+
+springinitializer을 통해서 프로젝트를 생성하면 아래 코드가 기본적으로 들어가 있다.
+
+```xml
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
+    </plugins>
+</build>
+```
