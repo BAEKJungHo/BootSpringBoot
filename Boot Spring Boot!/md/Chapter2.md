@@ -153,4 +153,8 @@ http://www.javapractices.com/topic/TopicAction.do?Id=205
 
 ## auto-configuration
 
-자동구성 기능을 활성화 하려면 @Configuration이 선언된 클래스에 @EnableAutoConfiguration 혹은 @SpringBootApplication을 추가하면ㄷ ㅚㄴ다.
+자동구성 기능을 활성화 하려면 @Configuration이 선언된 클래스에 @EnableAutoConfiguration 혹은 @SpringBootApplication을 추가하면 된다.
+
+## 스프링 MVC 컨트롤러 작성을 위한 14가지 팁
+
+https://dzone.com/articles/14-tips-for-writing-spring-mvc-controller <-- 유용한글 되게 많음
