@@ -40,3 +40,117 @@ buildscript {
 }
 ```
 
+## 스타터
+
+스타터는 애플리케이션이 이용할 수 있는 `의존성을 라이브러리 집합체`이다. 
+
+예를들어 Srping Data JPA를 사용하고 싶으면 build.gradle 혹은 pom.xml에 spring-starter-data-jpa 의존성을 추가하면 DataSource와 스프링에 대한 구성을 하지 않아도 바로 사용할 수 있다.
+
+## 부모 스프링부트 스타터 상속
+
+spring-boot-starter-parent를 상속하면 된다.
+
+```xml
+<parent>
+    <groupId>org.springframewor.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>2.0.0.RELEASE</version>
+</parent>
+```
+
+여기서 스프링 부트와 관련된 버전을 선언해서 사용할 수 있다. 부모 스프링부트 스타터를 상속받으면 의존성 관리의 이점을 얻을 수 있다.
+
+사용안하고도 가능한데 `scope=import`를 이용하면된다.
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <!-- 스프링 부트로부터 의존성관리 불러오기 -->
+            <groupId>org.springframework.boot</groupId>
+            <artifactid>spring-boot-dependencies</artifactId>
+            <version>2.0.0.RELEASE</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+spring-boot-starter-parent는 매우 보수적인 자바 호환성을 선택했다 (JAVA 6)
+
+자바 버전을 바꾸고 싶으면 아래 코드를 추가하면된다.
+
+```xml
+<properties>
+    <java.version>1.8</java.version>
+</properties>
+```
+
+## 코드 구조
+
+스프링 부트는 특별히 어떤 계층구조로 작성하라고 강요하지 않는다. 도움되는 몇가지 가이드가 있으며 이외에는 `팀과 조직의 관례(컨벤션 규칙, Convention Rules)`을 따르면된다.
+
+애플리케이션 메인 클래스는 최상위 패키지(boot.spring.boot)에 위치하는 것을 권장한다.
+
+### 가장 권장하는 구조
+
+- boot 
+    - spring
+        - boot
+            - BootSpringBootApplication.java
+            - domain
+                - Customer.java
+            - repository
+                - CustomerRepository.java
+            - service
+                - CustomerService.java
+                - CustomerServiceImpl.java
+            - web
+                - CustomerController.java
+
+### @SpringBootApplication
+
+@SpringBootApplication이 선언된 메인 클래스 위치를 임의로 변경하면, 수정(변경)해야할 작업도 많아진다.
+
+위 구조에서 BootSpringBootApplication.java를 app 패키지 아래 위치하게 되면
+
+- boot 
+    - spring
+        - boot
+            - app
+                - BootSpringBootApplication.java
+            - domain
+                - Customer.java
+            - repository
+                - CustomerRepository.java
+            - service
+                - CustomerService.java
+                - CustomerServiceImpl.java
+            - web
+                - CustomerController.java
+
+```java
+@SpringBootApplication(scanBasePacakages = {"boot.spring.boot.domain", "boot.spring.boot.service", "boot.spring.boot.web"})
+@EnableJpaRepositories("boot.spring.boot.domain")
+@EntityScan("boot.spring.boot.domain")
+public class BootSpringBootApplication {
+    public static void main(String][] args) {
+        SpringApplication.run(BootSpringBootApplication.class, args);
+    }
+}
+```
+
+위처럼 변경해야 한다. 위 처럼 변경해주지 않으면 컨트롤러 등의 빈(Bean)을 탐색하지 못해 예외가 발생한다. `NoSuchBeanDefinitionException`
+
+### 패키지 구조
+
+https://dzone.com/articles/package-structure
+
+https://www.slipp.net/questions/36
+
+http://www.javapractices.com/topic/TopicAction.do?Id=205
+
+## auto-configuration
+
+자동구성 기능을 활성화 하려면 @Configuration이 선언된 클래스에 @EnableAutoConfiguration 혹은 @SpringBootApplication을 추가하면ㄷ ㅚㄴ다.
