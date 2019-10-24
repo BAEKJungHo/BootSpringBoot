@@ -158,3 +158,82 @@ http://www.javapractices.com/topic/TopicAction.do?Id=205
 ## 스프링 MVC 컨트롤러 작성을 위한 14가지 팁
 
 https://dzone.com/articles/14-tips-for-writing-spring-mvc-controller <-- 유용한글 되게 많음
+
+
+## @ComponentScan
+
+@ComponentScan
+
+@ComponentScan(basePackages = "boot.spring")
+
+@ComponentScan을 사용하면 다른 속성을 정의하지 않아도된다. 모든 애플리케이션 컴포넌트(@Component, @Service, @Repository, @Controller)가 스프링 빈으로 자동등록된다.
+
+`스프링은 여러 DI중에서 생성자 주입 DI를 강조한다.`
+
+생성자 주입 예제
+
+```java
+@Service
+public class DatabasesAccountService implements AccountService {
+    
+    private final RiskAccessor riskAccessor;
+
+    @Autowired
+    public DatabasesAccountService(RiskAccessor riskAccessor) {
+        this.riskAccessor = riskAccessor;
+    }
+}
+```
+
+위 코드에서 생성자 위에 `@Autowired` 어노테이션을 붙였는데 없어도 의존성 주입이 가능하다
+
+어떠한 빈에 생성자가 오직 하나만 있고, 그 생성자에 파라미터 타입에 빈으로 등록 가능한 존재라면, 이 빈(Bean)은 @Autowired 어노테이션이 없더라도 주입을 해준다.
+
+riskAccessor 필드를 final로 함으로써 빈이 생성된 이후에 변경되지 않는다는것을 명시하는 것이다.
+
+위 코드에서 생성자를 없애고 빈으로 등록하는 방법이 있는데 롬복에서 지원하는 @RequiredArgsConstructor 어노테이션을 사용하면 된다.
+
+```java 
+@RequiredArgsConstructor
+public class DatabasesAccountService implements AccountService {
+    
+    private final RiskAccessor riskAccessor;
+
+}
+```
+
+## @SpringBootApplication
+
+@SpringBootApplication을 사용하면 @ComponentScan, @EnableAutoConfiguration, @Configuration 을 함께 사용한것과 같다.
+
+스프링 부트 1.4 버전부터 @Configuartion 대신 @SpringBootConfiguration로 대체되었다. @SpringBootConfiguration도 내부적으로 @Configuration 어노테이션을 사용하고 있다.
+
+```java
+package org.springframework.boot;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import org.springframework.context.annotation.Configuration;
+
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Configuration
+public @interface SpringBootConfiguration {
+}
+```
+
+## 패키징된 Application 실행하기
+
+스프링 부트 메이븐 혹은 그레이들 플러그인을 사용하고 있다면 실행가능한 jar를 생성하여 `java -jar`명령으로 애플리케이션을 실행할 수 있다.
+
+> java -jar build/lib/boot-spring-boot-2.0.0.RELEASE.jar
+
+## spring-boot-devtools 사용하기
+
+인텔리제이는 저장하면 빌드하는 매크로를 만들어 사용해야한다. 이클립스는 자동
+
+[IntelliJ에서 Spring Devtools 활용하기](https://sbcoba.tistory.com/36)
