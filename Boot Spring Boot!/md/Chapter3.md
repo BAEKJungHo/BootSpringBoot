@@ -154,3 +154,61 @@ public class HelloRestController {
 
 }
 ```
+
+## 애플리케이션 속성 파일
+
+SpringApplication은 다음 위치에 있는 application.yml(properties) 파일을 읽어서 Environment에 속성을 적재한다.
+
+1. 현재 디렉터리 하위에 있는 /config
+2. 현재 디렉터리
+3. 클래스패스 /config 패키지
+4. 최상위 클래스 패스
+
+
+최상위 클래스 패스는 ${PROJECT_HOME}/src/main/java 혹은 ${PROJECT_HOME}/src/main/resources를 의미한다.
+
+### properties보다 yml이 좋은 이유
+
+properties 파일로 작성할 경우 프로파일에 따라서 구성 파일이 여러 개로 나뉘어야 하는데 반해, yml은 --- 구분자를 통해서 프로파일을 구분지을 수 있어 하나의 애플리케이션 속성문서에서 
+프로파일별 적용을 파악할 수 있으며 프로파일에 따라 덮어쓰는 속성들을 파악하기가 용이하다.
+
+```yml
+... 생략
+
+---
+spring:
+  profiles: test
+  datasource:
+    url: jdbc:log4jdbc:mysql://xxx.xxx.xx.xx:3307/DB명?autoReconnect=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+    username: testUser
+    password: root
+---
+spring:
+  profiles: learning
+  datasource:
+    url: jdbc:log4jdbc:mysql://xxx.xxx.xx.xx:3306/DB명?autoReconnect=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+    username: learningUser
+    password: root
+---
+```
+
+이런식으로 적용하면 Edit Configuration에서 active propfiles에 profiles 이름을 적어서 원하는 프로파일을 사용할 수 있다.
+
+### 속성내 치환자(placeholder)
+
+application.yml에 정의된 값은 Environment에 존재할 경우 필터링 되기 때문에 앞서 정의한 값을 위처럼 다음처럼 사용할 수 있다.
+
+```yml
+app:
+    name: boot spring boot
+    descr: ${app.name} is Spring Boot Application
+```
+
+### 스타터(Starters)를 사용하면 spring-boot-starter를 통해서 자동으로 yml을 제공한다.
+
+### YAML 적재
+
+    스프링 프레임워크는 YAML 문서 적재에 사용하기 위해 두 가지 클래스를 제공한다.
+
+    1. YamlPropertiesFactoryBean : Properties에 YAML을 적재
+    2. YamlMap-FactoryBean : Map에 YAML을 적재
