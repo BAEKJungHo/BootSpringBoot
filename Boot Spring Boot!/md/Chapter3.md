@@ -212,3 +212,125 @@ app:
 
     1. YamlPropertiesFactoryBean : Properties에 YAML을 적재
     2. YamlMap-FactoryBean : Map에 YAML을 적재
+
+### YAML 단점
+
+YAML 파일은 @PropertySource 어노테이션에 적재되지 않는다. @PropertySource에 값을 적재하기 위해서는 properties 파일을 사용해야 한다.
+
+```yml
+barxxx:
+    ~
+barzzz:
+```
+
+서드파티 구성
+@ConfigurationProperties는 클래스 레벨에서 선언해도 잘 동작하지만, 메서드 레벨에서 @Bean을 선언할 때도 사용할 수 있다. 이 방법은
+서드파티 컴포넌트에 속성을 연결하고 외부에서 제어할 때 특히 유용하다.
+
+```java
+@Bean
+@ConfigurationProperties(prefix = "bar")
+public BarComponent barComponent() {
+
+}
+```
+
+
+prefix = "이름" 으로 사용하면 해당 이름을 접두사로 가진 값들이 바인딩 된다.
+
+### 느슨한 연결
+
+스프링 부트는 Environment 속성에서 @ConfigurationProperties 빈으로 연결할 때 몇 가지 느슨한 규칙을 사용하기 때문에 Environment 속성명과 빈 송성명을 정확하게
+맞추지 않아도 된다.
+
+아래와 같이 되어있을 경우
+
+```java
+@Getter @Setter
+@ConfigurationProperties(prefix="person")
+public class OwnerProperties {
+    private String firstName;
+}
+```
+
+아래 처럼 사용할 수 있다.
+
+property / name
+
+person.firstName  카멜식 문법
+
+person.first-name 프로퍼티스와 야믈 파일에서 사용하길 권장하는 대시 표기법
+
+person.first_name 프로퍼티스와 야믈 파일에서 대안으로 사용하는 미퉂ㄹ 표기법
+
+PERSON_FIRST_NAME 시스템 환경변수에서 사용할 때 권장
+
+### @ConfigurationProperties 유효성 검사
+
+스프링 부트는 스프링의 `@Validated` 어노테이션을 @ConfigurationProperties 클래스에 선언하여 유효성 검사를 할 수 있다.
+
+클래스패스 상에 JSR-303 구현체가 있다면 클래스 필드에 강제 어노테이션을 추가하는 것은 간단하다.
+
+```java
+@Component
+@Data
+@Validated
+@ConfigurationProperties("example")
+public class ExampleProperties {
+    private boolean enabled;
+
+    @NotNull
+    private InetAddress remoteAddress;
+
+    @Valid
+    privaet final Security security = new Security();
+
+    @Data
+    public static class Security {
+        @NotEmpty
+        private String username;
+        private String password;
+        private List<String> roles = new ArrayList<>(Collections.singleton("USER"));
+    }
+}
+```
+
+@Valid는 javax.validation.Valid이고 @Validated는 org.springframework.validation.annotation.Validated입니다
+
+@Validated를 사용한 그룹지정 방법 https://code-examples.net/ko/q/227f614
+
+## @Bean 메서드는 정적(static)으로 선언해야한다.
+
+@Bean 메서드를 정적으로 선언하면 @Configuration 클래스를 인스턴스화 하지 않고도 빈을 만들 수 있다. 이 방법은 초기 인스턴스 생성으로 발생할 수 있는 문제를 피할 수 있다.
+
+## @ConfiguationProperties와 @Valid 비교
+
+feature / @ConfigurationProperties / @Valid
+
+느슨한연결             지원           미지원
+메타데이터 지원        지원           미지원
+SpEL 평가             미지원          지원
+
+## simpleMappingExceptionResolver 공부하기
+
+## 로깅
+
+스프링 부트는 기본 구성은 그대로 유지하면서 모든 내부 로깅에 `Commons Logging`을 사용한다. Java Util Logging, Log4J2 Logback을 위한 기본 구성을 제공한다.
+
+스타터를 사용한다면 로깅에는 기본적으로 `로그백(Logback)`을 이용한다.
+
+### 파일 출력
+
+스프링 부트는 기본적으로 콘솔에만 로그를 출력하고 로그 파일을 작성하지는 않는다.
+
+만약 로그 파일을 작성하길 원한다면 logging.file 혹은 logging.path 속성을 설정해야 한다.(application.yml에 작성)
+
+logging.* 송성은 다음과 같다.
+
+logging.file / logging.path / 예 / 설명 
+미지정           미지정                         콘솔에만 출력됨
+파일지정         미지정        app.log          지정된 로그파일을 작성한다. 이름으로 현재 디렉터리에 대한 상대경로나 위치를 지정
+미지정           지정 디렉터리  /var/log         지정된 디렉터리에 spring.log로 작성한다. 이름으로 현재 디렉터리나 위치를 지정할 수 있다.
+
+
+로그 파일은 10MB 단위로 절삭되며 ERRROR, WARN 그리고 INFO 레벨 메세지가 기본적으로 기록된다.
