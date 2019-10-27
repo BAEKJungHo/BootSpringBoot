@@ -2,3 +2,22 @@ code:
     secret: ${random.value}
     bignumber: ${random.long}
     uuid: ${random.uuid}
+
+server:
+    port: 1234
+
+---
+spring:
+    profiles: test
+    datasource:
+        url: jdbc:log4jdbc:mysql://xxx.xxx.xx.xx:3307/DB명?autoReconnect=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+        username: testUser
+        password: root
+---
+spring:
+    profiles: learning
+    datasource:
+        url: jdbc:log4jdbc:mysql://xxx.xxx.xx.xx:3306/DB명?autoReconnect=true&useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+        username: learningUser
+        password: root
+---

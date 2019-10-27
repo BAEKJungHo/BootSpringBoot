@@ -7,13 +7,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("greeting")
+@RequestMapping("learning")
 public class HelloRestController {
 
     private final RandomValuePropertySource randomValuePropertySource;
 
     @GetMapping
-    public String greeting() {
+    public String learning() {
         String uuid = randomValuePropertySource.getUuid();
         String bigNumber = randomValuePropertySource.getBigNumber();
         return "Hello ~" + uuid + "!!!" + bigNumber;
