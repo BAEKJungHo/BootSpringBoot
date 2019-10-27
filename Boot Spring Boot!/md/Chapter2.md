@@ -99,15 +99,22 @@ spring-boot-starter-parent는 매우 보수적인 자바 호환성을 선택했�
     - spring
         - boot
             - BootSpringBootApplication.java
-            - domain
-                - Customer.java
-            - repository
-                - CustomerRepository.java
-            - service
-                - CustomerService.java
-                - CustomerServiceImpl.java
-            - web
-                - CustomerController.java
+            - module
+                - Customer
+                    - domain
+                        - Customer.java
+                    - repository
+                        - CustomerRepository.java
+                    - service
+                        - CustomerService.java
+                        - CustomerServiceImpl.java
+                    - web
+                        - CustomerController.java
+                - Article
+                    - domain
+                    - repository
+                    - service
+                    - web
 
 ### @SpringBootApplication
 
