@@ -308,7 +308,9 @@ public class ExampleProperties {
 feature / @ConfigurationProperties / @Valid
 
 느슨한연결             지원           미지원
+
 메타데이터 지원        지원           미지원
+
 SpEL 평가             미지원          지원
 
 ## simpleMappingExceptionResolver 공부하기
@@ -328,9 +330,212 @@ SpEL 평가             미지원          지원
 logging.* 송성은 다음과 같다.
 
 logging.file / logging.path / 예 / 설명 
+
 미지정           미지정                         콘솔에만 출력됨
+
 파일지정         미지정        app.log          지정된 로그파일을 작성한다. 이름으로 현재 디렉터리에 대한 상대경로나 위치를 지정
+
 미지정           지정 디렉터리  /var/log         지정된 디렉터리에 spring.log로 작성한다. 이름으로 현재 디렉터리나 위치를 지정할 수 있다.
 
 
 로그 파일은 10MB 단위로 절삭되며 ERRROR, WARN 그리고 INFO 레벨 메세지가 기본적으로 기록된다.
+
+### LevelRemappingAppender
+
+스프링 부트는 타임리프 INFO 메시지를 DEBUG 레벨로 기록한다. 이는 로그 출력을 표준화 하고 잡음을 감소시키는 효과를 가져온다.
+
+## 로그구성 재정의
+
+로깅은 ApplicationContext 보다 먼저 초기화 되기 때문에 스프링 @Configuration에서 @PropertySource로 로깅 시스템을 제어하는 것을 불가능하다.
+
+로깅시스템에 따른 필요한 파일들
+
+로깅 시스템 / 적재 파일명
+
+Logback / logback-spring.xml, logback.xml, logback-spring.groovy, logback.groovy
+
+Log4j2 / log4j2-spring.xml, log4j2.xml
+
+JDK(Java Util Logging) / logging.properties
+
+> 로깅 구성을 할 때 -spring 접미사를 사용하면(예를들어 logback.xml 보다는 logback-spring.xml) 로깅 재정의 파일이 지정된 위치에 있따면, 스프링은 로그 초기화를
+완벽하게 제어할 수 있다.
+
+`Java Util Logging`을 사용하면 실행가능한 jar에서 Java Utils Logging 클래스로딩 문제가 발생할 수 있으므로, Logback, Log4j2, Slf4j 등의 라이브러리를 사용하는게좋다.
+
+## 로그백 확장
+
+스프링 부트는 로그백에 대한 많은 확장 포인트를 가지고 있어서 ㄷ보다 나은 구성을 할 수 있다.
+
+logback-spring.xml 구성파일을 확장할 수 있다.
+
+> 너무 빠르게 적재되는 표준 logback.xml 구성 파일에서는 확장을 사용할 수 없다.
+
+## @RequestBody
+
+클라이언트가 등록을 위해서 HTTP 트랜잭션을 서버와 하는 경우 이때 사용되는 메서드는 POST 메서드이다. 
+
+따라서 API로 통신하는 경우 컨트롤러에는 @ResController가 붙어 있을 것이고, @PostMapping이 적용된 HandlerMethod의 커맨드 객체 앞에는 @RequestBody가 붙어야한다.
+
+왜냐하면 일반적으로 HTTP 트랜잭션을 실행할 때, GET 방식인 경우 요청 메세지에서는 시작줄 헤더 본문에서 본문이 빠지게 되지만,
+
+POST 방식에서는 시작줄 헤더 본문 모두를 가지고 있기 때문에, 엔티티 본문에 해당하는 내용을 커맨드 객체에 바인딩 시키기 위해 이다.
+
+## 스프링 MVC 자동구성
+
+스프링 부트는 스프링 MVC에 대한 자동구성을 제공하며 대부분의 애플리케이션에서 큰 무리 없이 잘 동작한다.
+
+스프링 MVC 구성에는 WebMvcProperties 속성(spring.mvc.*)을 이용한다.
+
+자동구성은 스프링 기본 구성에 다음 기능을 추가한다.
+
+- ContentNegotiatingViewResolver와 BeanNameViewResolver 빈 포함
+- 정적자원 지원 및 WebJars 지원기능 포함
+- Converter, GenericConverter, Formatter 빈 자동등록
+- HttpMessageConverter 지원
+- MessageCodeResolver 자동등록
+- 정적 index.html 지원
+- Favicon 재정의 지원
+- ConfigurableWebBindingInitializer 빈 자동지원
+
+> 스프링 부트 MVC 기능을 유지하면서 MVC 구성(인터셉터, 포맷터, 뷰, 컨트롤러 등)을 추가하고 싶다면 @EnableWebMvc 없이 `WebMvcConfigurer 타입의 클래스에 @Configuration`을 추가하면 된다.
+> 
+> WebMvcConfigurer을 구현하고 있는 WebMvcConfigurerAdapter를 상속받은 클래스를 만들고 @Configuartion을 추가해서 관리하면 된다.
+
+```java
+public abstract class WebMvcConfigurerAdapter implements WebMvcConfigurer {
+    public WebMvcConfigurerAdapter() {
+    }
+
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+    }
+
+    public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
+    }
+
+    public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+    }
+
+    public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
+    }
+
+    public void addFormatters(FormatterRegistry registry) {
+    }
+
+    public void addInterceptors(InterceptorRegistry registry) {
+    }
+
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    }
+
+    public void addCorsMappings(CorsRegistry registry) {
+    }
+
+    public void addViewControllers(ViewControllerRegistry registry) {
+    }
+
+    public void configureViewResolvers(ViewResolverRegistry registry) {
+    }
+
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
+    }
+
+    public void addReturnValueHandlers(List<HandlerMethodReturnValueHandler> returnValueHandlers) {
+    }
+
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+    }
+
+    public void extendMessageConverters(List<HttpMessageConverter<?>> converters) {
+    }
+
+    public void configureHandlerExceptionResolvers(List<HandlerExceptionResolver> exceptionResolvers) {
+    }
+
+    public void extendHandlerExceptionResolvers(List<HandlerExceptionResolver> exceptionResolvers) {
+    }
+
+    public Validator getValidator() {
+        return null;
+    }
+
+    public MessageCodesResolver getMessageCodesResolver() {
+        return null;
+    }
+}
+```
+WebMvcConfigurer와 WebMvcRegistrations 소스를 살펴보면 메서드에 default 메서드가 선언됬는데 Java7을 지원하는 스프링부트 1.5 버전에서는 default 메서드가 없었기에
+WebMvcConfigurer을 사용하려면 인터페이스에 선언된 메서드를 모두 구현해야하는데, 이런 불편함을 해소하고자 WebMvcConfigurerAdapter 추상 클래스를 제공하는 것이다.
+따라서 필요한 메서드만 오버라이딩 하여 구현하면 된다.
+
+하지만 스프링부트 2.0 버전 부터 Java8과 스프링 5.0을 사용하면서 WebMvcConfigurer 메서드에 default를 선언해서 WebMvcConfigurerAdapter 클래스는 스프링 부트 2.0에서 Deprecated되었다.
+
+> 만약 스프링 MVC를 완벽하게 제어하고 싶다면 @Configuration 선언에 추가적으로 @EnableWebMvc를 선언하면 된다.
+
+- @Configuration과 @EnableWebMvc를 함께 선언
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebMvcConfig {}
+```
+
+> @EnableWebMvc를 선언하면 WebMvcConfigurationSupport에서 구성한 스프링 MVC 구성을 불러온다.
+
+- @Configuration과 @EnableWebMvc를 함께 선언한 클래스가 WebMvcConfigurer 인터페이스 구현
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebMvcConfig implements WebMvcConfigurer {
+    @Override
+    public void addFormatters(FormatterRegistry formatterRegistry) {
+        formatterRegistry.addConverter(new MyConverter());
+    }
+
+    @Override
+    public void configureMessageConverters(List<HttpMessageConverter> converters) {
+        converters.add(new MyHttpMessageConverter());
+    }
+}
+```
+
+위처럼 선언하면 WebMvcConfigurationSupport에서 자동구엇ㅇ한 스프링 MVC 구성에 Formatter, MessageConverter 등을 추가적으로 등록할 수 있다.
+
+## HttpMessageConverters
+
+스프링 MVC는 HTTP 요청과 응답에 HttpMessageConverter 인터페이스를 사용한다. 기본적인 처리 방식은 객체를 자동으로 JSON 혹은 XML(JAXB를 사용하거나 가능하다면 Jackson XML 확장을 사용)로 변환가능하도록 되어있다.
+
+```java
+@Configuration
+public class MyConfiguration {
+    @Bean
+    public HttpMessageConverters customConverters() {
+        HttpMessageConverter<?> additional = ...
+        HttpMessageConverter<?> another = ...
+        return new HttpMessageConverters(additional, another);
+    }
+}
+```
+
+## JSON 직렬화와 역직렬화 재정의
+
+JSON 데이터에 대해서 직렬화(serialize)와 역직렬화(desirialize)에 대해 Jackson을 사용한다면 JsonSerializer와 JsonDeserializer 클래스를 작성할 수 있다.
+
+재정의한 시리얼라이저(Serializers)는 Jackson 모듈로 등록 가능하지만, 스프링 부트는 대안으로 @JsonComponent 어놑이션을 이용해서 스프링 빈으로 바로 등록 가능하다.
+
+JsonSerializer 혹은 JsonDeserializer 구현체에 @JsonComponent를 사용할 수 있다. 혹은 내부 클래스에 포함하는 방식을 사용할 수도 있다.
+
+```java
+@JsonComponent
+public class Example {
+    public static class Seriaizer extends JsonSeriaizer<SomeObject> {
+        // ...
+    }
+    public static class Deserializer extends JsonDeseriaizer<SomeObject> {
+
+    }
+}
+```
+
+@JsonComponent도 컴포넌트 스캔 규칙에 적용된다.
