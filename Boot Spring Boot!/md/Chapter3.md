@@ -556,3 +556,21 @@ public class Example {
 ```
 
 body안에 JSON으로 변환된 객체를 넣어서 응답 본문에 세팅하여 보낼 수 있다. ok와 badRequest는 상태코드를 나타낸다.
+
+## Spring의 특성 getParameterValues
+
+        String value1 = request.getParamter("seq"); // 1개만 
+        String value2 = request.getParamterValues("seq"); // 1,2,3,4,5
+
+        스프링은 내부적으로 getParameterValues() 처럼 ,로 구분하여 값들을 저장시킨다
+
+        ```java
+        @PostMapping
+        public String create(UserMenuVo userMenuVo) {
+
+        }
+        ```
+
+        userMenoVo안에 
+
+        userMenuSeq가 1,2,3,4,5 이런식으로 들어간다.
