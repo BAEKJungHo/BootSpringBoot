@@ -539,3 +539,20 @@ public class Example {
 ```
 
 @JsonComponent도 컴포넌트 스캔 규칙에 적용된다.
+
+## ResponseEntity
+
+```java
+    @PostMapping("/write")
+    public ResponseEntity create(@Valid SatisfactionCreateDto satisfactionCreateDto,
+                                 BindingResult result, HttpSession session) {
+
+            // 생략
+            if(result.hasErrors()) {
+            return ResponseEntity.badRequest().body(errorResponse);
+            }
+
+            return ResponseEntity.ok().body("true");
+```
+
+body안에 JSON으로 변환된 객체를 넣어서 응답 본문에 세팅하여 보낼 수 있다. ok와 badRequest는 상태코드를 나타낸다.
