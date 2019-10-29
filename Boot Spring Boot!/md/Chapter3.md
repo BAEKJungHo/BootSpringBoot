@@ -574,3 +574,100 @@ body안에 JSON으로 변환된 객체를 넣어서 응답 본문에 세팅하�
         userMenoVo안에 
 
         userMenuSeq가 1,2,3,4,5 이런식으로 들어간다.
+
+## jar의 특성
+
+jar로 패키징한 애플리케이션에서 src/main/webapp 디력터리를 사용하지 않는다. 이 디렉터리는 공통표준이지만 오직 war 패키징에서만 동작하며 jar 파일을 생성할 때는
+조용히 무시처리된다.(WEB-INF도 마찬가지)
+
+## 스프링 부트에서 정적자원에 대한 정보를 캐시화 시켜서(캐시 버스팅), 원 서버에 대한 정적자원 요청을 없애는 방법
+
+캐시 적중이 일어나면 원 서버에 대한 요청이 없으므로(캐시된 사본을 클라이언트에게 제공하는 경우) 인터넷 비용이 줄어들고 속도가 빨라진다.
+단. 재검사 적중을 해야하는 경우도 있다.(너무 오래된 파일인경우, 원 서버의 파일과 동일한지 검사)
+
+스프링 부트는 스프링 MVC에서 제공하는 자원 제어 기능보다 효과적인 방식(캐시 버스팅(`cache-busting`)과 정적 자원 혹은 Webjars를 위한 버전무시 전략)을 제공한다.
+
+### 캐시 버스팅
+
+캐시 버스팅 사용의 경우, 다음 구성을 따르면 모든 정적자원에 대해서 캐시 버스팅 적용이 구성되어 모든 자원 URL에 대해서 해시가 추가 된다.
+
+정적자원에 대한 정보를 해시코드화하여 이 정보가 변경되지 않는 경우에는 캐시를 유지하도록하여 자원에 대한 요청을 하지 않도록 하여 화면구성을 빠르게 할 수 있다.
+
+```yml
+spring.resources.chain.strategy.content.enabled: true
+spring.resources.chan.strategy.content.paths: /**
+```
+
+만약 동적으로 자원 접근시 자바스크립트 모듈 로더처럼 이름이 변겨오디면 안되는 경우가 있다. 이런 때는 파일 이름을 변경하지 않고 URL에 정적자원 버전을 추가하는
+`fixed`전략을 이용하면 된다.
+
+- application.yml
+
+```yml
+spring.resource.chain.strategy.content:
+    enabled: true
+    paths: /**
+spring.resources.chain.strategy.fixed:
+    enabled: true
+    paths: /js/lib/
+    version: v12
+```
+
+- application.properties
+
+```yml
+spring.resources.chain.strategy.content.enabled=true
+spring.resource.chain.strategy.content.paths=/**
+spring.resources.chain.strategy.fixed.enabled=true
+spring.resources.chain.strategy.fixed.paths=/js/lib
+spring.resources.chain.strategy.fixed.version=v12
+```
+
+## 템플릿 엔진
+
+기본 구성과 함께 템플릿 엔진을 사용할 때는 src/main/resources/templates에서 템플릿 파일을 찾는다.
+인텔리제이는 애플리케이션 실행 방법에 따라 클래스패스를 다르게 결정한다. 이를 위한 해결방법은 클래스패스 상에서 모든 템플릿 파일을 탐색하도록 템플릿 접미사를
+`classpath*: /templates/`로 구성할 수 있다.
+
+## 에러처리
+
+스프링 부트는 모든 에러에 대해서 /error 디렉터리에 있는 정적파일(혹은 템플릿 파일)을 연결하여 보여주는 에러 처리기능을 제공하며, 이를 이용해서 서블릿 컨테이너에서 `전역`
+에러 페이지를 등록할 수 있다. 
+
+> 클라이언트를 위해서 에러에 대한 상세한 내용(HTTP 상태와 예외 출력 메시지)을 JSON응답으로 제공할 수 도 있다.
+
+브라우저 클라이언트는 동일한 데이터가 HTML로 랜더링되어 `whitelabel` 에러 뷰로 처리된다(error에 대응한 View를 추가하면 재정의 된다.) ErrorController를 구현하고 빈으로 등록하거나
+`ErrorAttributes` 유형의 빈을 추가하면 기본 동작을 완벽하게 대체할 수 있다.
+
+스프링 부트 화이트레이블(whitelabel) 에러 페이지는 스타일이 반영되지 않은 순백 페이지에 에러와 관련된 내용만을 노출한다. 운영단계에서는 이쁘게 꾸며진 에러 페이지를 만들어서 사용하는게 좋다.
+
+```java
+@ControllerAdvice(basePackageClasses = HelloController.class) // HelloController와 동일한 패키지에 있는 컨트롤러들 적용
+public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
+    @ExceptionHandler(YourException.class) // YourException이 발생하는 경우
+    @ResponseBody
+    ResponseEntity<?> handleControllerException(HttpServletRequest request, Throwable ex) {
+        HttpStatus status = getStatus(request);
+        return new ResponseEntity<>(new CustomErrorType(status.value(), ex.getMessage()), status);
+    }
+
+    private HttpStatus getStatus(HttpServletRequest request) {
+        Integer statusCode = (Integer)request.getAttribute("javax.servlet.error.status_code");
+        if(statuscode == null) {
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        return HttpStatus.valueOf(statusCode);
+    }
+}
+```
+
+### 에러 페이지 재정의
+
+상태 코드에 따라 재정의한 HTML 에러 페이지를 보여주고 싶다면, /error 디렉터리에 파일을 추가한다. 에러 페이지는 정적 HTML 파일(정적 자원 디렉터리 /static 또는 /resources 아래에 추가하거나)이거나 템플릿 엔진에 의해 구성될 수 있다. 파일이름은 상태코드(EX) 404.html) 혹은 일련번호(4xx.html)와 일치해야 한다.
+
+- 404 대응 파일
+    - src/main/java -> 소스코드
+    - src/main/resources/public/error/404.html
+- 5xx계열 대응 파일
+    - src/main/java -> 소스코드
+    - src/resources/templates/error/5xx.html
