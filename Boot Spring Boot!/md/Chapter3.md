@@ -671,3 +671,109 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 - 5xx계열 대응 파일
     - src/main/java -> 소스코드
     - src/resources/templates/error/5xx.html
+
+## CORS 지원
+
+Cross Origin Resource Sharing(CORS)는 대부분의 브라우저에서 구현하고 있는 W3C 사용으로 IFRAME 혹은 JSONP와 같이 덜 안전하고 덜 강력한 접근 방식을 사용하는 대신
+`어떤 종류의 도메인 간 요청을 허용할지 유연하게 지정`할 수 있다.
+
+> CORS(Cross-origin resource sharing)이란, 웹 페이지의 제한된 자원을 외부 도메인에서 접근을 허용해주는 메커니즘이다.
+
+스프링 MVC 4.2 버전부터 CORS를 지원한다.
+
+Ajax 등을 통해 다른 도메인의 서버에 url(data)를 호출할 경우 XMLHttpRequest는 보안상의 이유로 자신과 동일한 도메인으로만 HTTP요청을 보내도록 제한하고 있어 에러가 발생한다.
+내가 만든 웹서비스에서 사용하기 위한 rest api 서버를 무분별하게 다른 도메인에서 접근하여 사용하게 한다면 보안상 문제가 될 수 있기 때문에 제한하였지만 지속적으로 웹 애플리케이션을 개선하고 쉽게 개발하기 위해서는 이러한 request가 꼭 필요하였기에 그래서 XMLHttpRequest가 cross-domain을 요청할 수 있도록하는 방법이 고안되었다.
+그것이 CORS 이다.
+
+스프링 부트 애플리케이션에서는 별다른 구성없이 CORS를 구성하려는 메서드에서 `@CrossOrigin` 어노테이션을 사용하면 된다.
+
+
+스프링 RESTful Service에서 CORS를 설정은 @CrossOrigin 어노테이션을 사용하여 간단히 해결 할 수 있다. RestController를 사용한 클래스 자체에 적용할 수 도 있고, 특정 REST API method에도 설정 가능하다.
+또한, 특정 도메인만 접속을 허용할 수도 있다.
+
+```java
+@CrossOrigin(origins = “허용주소:포트”)
+```
+
+> http://jmlim.github.io/spring/2018/12/11/spring-boot-crossorigin/
+
+### WebMvcConfigurer를 통해 적용하는 방식
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings (CorsRegistry registry) {
+        // 모든 uri에 대해 http://localhost:1234, http://localhost:8888 도메인은 접근을 허용한다.
+        registry.addMapping("/**)
+            .allowedOrigins("http://localhost:1234", "http://localhost:8888");
+    }
+}
+```
+
+### @CrossOrigin 어노테이션을 이용하는 방식
+
+```java
+@RestController
+@RequestMapping("/account")
+public class AccountController {
+    @CrossOrigin
+    @RequestMapping("/{id}")
+    public Account retrieve(@PathVariable Long id) {
+        // ...
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, path = "/{id}")
+    public void remove(@PathVariable Long id) {
+        // ...
+    }
+
+}
+```
+
+```java
+@RestController
+@RequestMapping("/account")
+@CrossOrigin(orogins = {"http://localhost:1234", "http://localhost:8888"})
+public class AccountController {
+    @RequestMapping("/{id}")
+    public Account retrieve(@PathVariable Long id) {
+        // ...
+    }
+
+    @RequestMapping(method = RequestMethod.DELETE, path = "/{id}")
+    public void remove(@PathVariable Long id) {
+        // ...
+    }
+}
+```
+
+### WebMvcConfigurer를 빈으로 등록하는 방식
+
+```java
+@Configuration
+public class MyConfiguration {
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public voidd addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/api/**");
+            }
+        };
+    }
+}
+```
+
+## 스프링 WebFlux 프레임워크
+
+스프링 `WebFlux`는 스프링 프레임워크 5.0에서 소개된 새로운 리액티브 웹 프레임워크이다.
+
+스프링 MVC와는 달리 서블릿 API가 필요 없으며, 완전한 `비동기(asynchronous)` 방식이자 `넌블로킹(non-blocking)` 방식이고 Reactor project의 Reactive Streams를 구현했다.
+
+스프링 WebFlux에는 두 가지 방식을 이용한다.
+
+1. 함수형(functional) 기반
+2. 어노테이션 기반
+
+우리가 알고있는 스프링 MVC 모델과 매우 유사(완전히 똑같지는 않음)
