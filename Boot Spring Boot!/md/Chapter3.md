@@ -812,3 +812,73 @@ JSP 페이지(파일)을 `WEB-INF/*`에 두는 이유는 톰캣의 경우 JSP �
 JSP외의 템플릿 엔진을 고려해야한다.
 
 JAR로 배포하는경우 JSP를 쓸 수 있긴 한데 resources 하위에 두면된다.
+
+## spring-boot-starter-jpa
+
+spring-boot-starter-jpa를 사용하면 spring-boot-starter-aop, spring-boot-starter-jdbc에 대한 의존성이 추가되며 하이버네이트 구현체에 대한 의존성이 추가된다.
+
+
+## 엔티티 클래스
+
+일반적으로 JPA 엔티티 클래스는 persistence.xml 파일에 정의한다. 그러나 스프링 부트는 `엔티티 탐색`을 사용하기 때문에 이 파일이 필요하지 않다. 
+기본적으로 메인 구성 클래스(`@EnableAutoConfiguration` 호은 `@SpringBootApplication`이 선언되어있는)를 기준으로 하위에 모든 패키지를 탐색한다.
+
+`@Entity, @Embeddable 혹은 @MappedSuperclass`가 선언되어 있는 클래스를 대상으로 한다.
+
+일반적인 엔티티클래스는 다음과 같다.
+
+```java
+@Entity
+@Getter
+@NoArgsConstructor(acceses=AccessLevel.PROTECTED)
+@ToString
+@EqualsAndHashCode(of = { "id" })
+public class User implements Serializable {
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(length = 50)
+    private String name;
+
+    public User(String email, String password) {
+        Assert.hasText(email, "User required email");
+        Assert.hasText(password, "User required password");
+
+        this.email = email;
+        this.password = password;
+    }
+}
+```
+
+## MyBatis 사용하기
+
+MyBatis를 사용하기 위해서는 스프링 부트에서 MyBatis를 사용하기 위한 스타터를 추가해야한다.
+
+```yml
+dependencies {
+    complie("org.mybatis.spring.bott:myabatis-spirng-boot-starter:1.3.1")
+}
+```
+
+```xml
+<dependency>
+    <groupId>org.mybatis.spring.bott</groupId>
+    <artifactId>mybatis-spring-boot-starter</artifactId>
+    <version>1.3.1</version>
+</dependency>
+```
+
+mybatis-spring-boot-starter가 추가되면 다음과 같은 작업이 진행되며 mybatis를 사용할 수 있게된다.
+
+- 존재하는 DataSource 탐색
+- SqlSessionFactoryBean을 이용해서 찾아낸 DataSource를 전달하여 sql SessionFactory 인스턴스를 생성하고 등록
+- 매퍼를 자동으로 탐색하여 SqlSessionTemplate에 연결하고 스프링 컨텍스트에 등록하여 Bean에 주입가능
+- 매퍼는 @Mapper 어노테이션을 선언하여 자동검색 노출
+
