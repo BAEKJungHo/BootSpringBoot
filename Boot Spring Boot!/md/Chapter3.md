@@ -882,3 +882,50 @@ mybatis-spring-boot-starter가 추가되면 다음과 같은 작업이 진행되
 - 매퍼를 자동으로 탐색하여 SqlSessionTemplate에 연결하고 스프링 컨텍스트에 등록하여 Bean에 주입가능
 - 매퍼는 @Mapper 어노테이션을 선언하여 자동검색 노출
 
+## @Transactional
+
+@Transactional을 사용하면 기본적으로 각 테스트가 끝나느 시점에 트랜잭션에 대한 롤백이 발생한다. RANDOM_PORT 혹은 DEFINED_PORT를 사용한다면 테스트와는 별개로
+서버에서 시작된 트랜잭션은 롤백되지 않는다.
+
+## @Import
+
+테스트가 실행될 때만 적용되는 구성 클래스 MyTestConfiguration을 src/test/java에 작성해두고 @Import로 호출할 수 있다.
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest
+@Import(MyTestsConfiguration.class)
+public class MyTest {
+    @Test
+    public void exampleTest() {
+        // ...
+    }
+}
+```
+
+## 빈에 대한 모방(Mock)과 스파이(Spy) 처리
+
+테스트를 실행할 때 애플리케이션 컨텍스트 내에서 특정 구성요소를 모방(Mock)해야 하는 경우가 있다. 예를 들어, 개발 동안에 원격 서비스를 흉내내야 할 때가 있다.
+모킹은 실제 환경에서 구현하기 어려운 실패하는 경우를 원하는 경우 유용하다.
+
+스프링 부트는 `@MockBean` 어노테이션을 통해 ApplicationContext에 있는 빈을 `Mockito Mock` 객체로 정의할 수 있다. 어노테이션을 사용하여 새로운 빈을 추가하거나 정의되어 있는 빈을 대체할 수 있다. 테스트 클래스에서 바로 사용하거나 `@Configuration` 클래스와 필드에서 사용할 수 있다. 필드에 사용할 경우, 생성된 목 인스턴스가 주입된다. 모방 빈은 각 테스트 메서드마다 자동으로 초기화된다.
+
+```java
+@RunWith(SpringRunner.class)
+@SpringBootTest
+public class MyTests {
+    @MockBean
+    private RemoteService remoteService;
+
+    @Autowired
+    private Reverser reverser;
+
+    @Test
+    public void exampleTest() {
+        // RemoteService has beean injected into the reverser bean
+        given(this.remoteService.someCall()).willReturn("mock");
+        String reverse = reverser.reverseSomecall();
+        asssertThat(reverse).isEqualTo("kcom");
+    }
+}
+```
