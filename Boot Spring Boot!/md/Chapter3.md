@@ -929,3 +929,40 @@ public class MyTests {
     }
 }
 ```
+
+## ViewResolver
+
+ViewResolver는 스프링 MVC에서 핵힘 컴포넌트로서, @Controller에서 뷰 이름을 번역하여 실제 View로 구현한다. ViewResolvers는 REST 스타일의 서비스(@ResponseBody 랜더링에 사용되지 않음)보다는
+UI 애플리케이션에 사용된다.
+
+- `InternalResourceViewResolver`
+    - 빈 ID는 deafultViewResolver 이다.
+    - DefaultServlet을 사용하여 랜더링 할 수 있는 물리적인 위치를 찾는다.(Ex. 정적자원과 JSP 페이지를 이용하는 경우)
+    - 접두사(prefix)와 접미사(suffix)를 적용한 뷰이름과 서블릿 컨텍스트에서 물리적 리소스를 찾는다.
+    - 동일한 타입의 빈을 생성하여 덮어쓰는 것이 가능하다.
+
+- `BeanNameViewResolver`
+    - 빈 ID는  beanNameViewResolver 이다.
+    - 뷰를 처리하는 과정에서 동일한 이름을 가진 빈을 찾는다.
+    - 이 빈을 덮어쓰거나 대체할 필요가 없다.
+
+- `ContentNegotiatingViewResolver`
+    - 실제로 View 타입의 빈이 있는 경우에만 추가된다.
+    - 이 빈은 마스터 리졸버로서 클라이언트가 보낸 요청에서 `Accept HTTP` 헤더에 일치하는 것들을 탐색한다.
+    - https://goo.gl/7txy4T
+
+- `ThyeleafViewResolver`
+    - 타임리프를 사용하고 있다면 thymeleafViewResolver 라는 ID로 ThyeleafViewResolver를 사용할 수 있다.
+    - 뷰이름에 접두사와 접미사를 적용하여 자원을 탐색한다.
+    - spring.thymeleawf.prefix와 spring.thymeleaf.suffix로 외부구성이 가능
+    - 기본값으로 classpath/templates/ 와 .html을 사용한다.
+    - 동일한 이름의 빈을 정의하여 덮어쓰기가 가능하다.
+
+- `FreeMarkerViewResolver`
+
+- `GroovyMarkupViewResolver`
+
+## RestTemplate가 프록시를 사용하도록 구성
+
+RestTemplate을 재정의하는데 RestTemplateBuilder에서 사용할 수 있도록 RestTemplateCustomizer를 구현하여 빈으로 등록 사용할 수 있다. 이 제안은 프록시를 사용할 때
+RestTemplate를 구성하여 생성할 수 있다.
